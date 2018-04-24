@@ -22,7 +22,7 @@ public class Server extends TerminatableLoop {
 	protected void loop() {
 		try {
 			System.out.println("Listening");
-			new SocketConnection(server.accept()).start();
+			new SocketConnection(server.accept());
 		} catch (IOException e) {
 			
 		}
