@@ -1,10 +1,9 @@
 package com.nenovike.lanTalk;
 
 import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.InterfaceAddress;
-import java.net.NetworkInterface;
+import java.net.MulticastSocket;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import javafx.application.Application;
@@ -17,7 +16,7 @@ import javafx.stage.Stage;
 public class MainWindow extends Application {
 	static String name = "LanTalk";
 	static Stage primaryStage;
-	
+
 	static MainWindowController mainWindowController;
 
 	@Override
@@ -27,45 +26,30 @@ public class MainWindow extends Application {
 		Parent root = fxmlLoader.load(getClass().getResource("MainWindow.fxml"));
 		mainWindowController = (MainWindowController) fxmlLoader.getController();
 		Scene scene = new Scene(root);
-        this.primaryStage.setScene(scene);
-        this.primaryStage.show();
-        ChangeName();
+		this.primaryStage.setScene(scene);
+		this.primaryStage.show();
+		ChangeName();
+		byte[] buf = "Siema".getBytes(StandardCharsets.UTF_8);
+		new Thread(new Server()).start();
+		MulticastSocket ms = new MulticastSocket(1112);
+		ms.joinGroup(InetAddress.getByName("233.0.0.0"));
+		ms.send(new DatagramPacket(buf, buf.length, InetAddress.getByName("233.0.0.0"), 1111));
+
 	}
-	
-	public static void ChangeName() throws Exception{
+
+	public static void ChangeName() throws Exception {
 		TextInputDialog nameDialog = new TextInputDialog("LanTalk");
-        nameDialog.setTitle("LanTalk");
-        nameDialog.setHeaderText("What is your name?");
-        nameDialog.setContentText("Enter it here: ");
-        Optional<String> result;
-        do {
-        	result = nameDialog.showAndWait();
-        }
-        while(result.isPresent()&&result.get().length() > 10);
-        if (result.isPresent()) 
-            name = result.get();
-        
-        primaryStage.setTitle(name + "(" + InetAddress.getLocalHost().getHostAddress() + ")");
-       
-        new Server().run();
+		nameDialog.setTitle("LanTalk");
+		nameDialog.setHeaderText("What is your name?");
+		nameDialog.setContentText("Enter it here: ");
+		Optional<String> result;
+		do {
+			result = nameDialog.showAndWait();
+		} while (result.isPresent() && result.get().length() > 10);
+		if (result.isPresent())
+			name = result.get();
 
-        
-        for (InterfaceAddress na : NetworkInterface.getByInetAddress(InetAddress.getLocalHost()).getInterfaceAddresses()) 
-        {
-            InetAddress broadcast = na.getBroadcast();
-            if (broadcast == null)
-                continue;
-            System.out.println("Sent to " + broadcast);
-
-            DatagramSocket socket = new DatagramSocket();
-            socket.setBroadcast(true);
-            byte[] buffer = "Siema".getBytes();
-            
-            socket.send(new DatagramPacket(buffer, buffer.length, broadcast, 1234));
-            System.out.println("Sent to " + broadcast);
-            socket.close();
-        }
-
+		primaryStage.setTitle(name + "(" + InetAddress.getLocalHost().getHostAddress() + ")");
 	}
 
 	public static void main(String[] args) {
