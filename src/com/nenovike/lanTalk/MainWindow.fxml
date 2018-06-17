@@ -17,6 +17,6 @@
           </Menu>
         </menus>
       </MenuBar>
-      <TextArea fx:id="contactList" editable="false" layoutX="14.0" layoutY="45.0" prefHeight="542.0" prefWidth="370.0" />
+      <ScrollPane fx:id="contactList" layoutX="14.0" layoutY="37.0" prefHeight="550.0" prefWidth="370.0" />
    </children>
 </AnchorPane>

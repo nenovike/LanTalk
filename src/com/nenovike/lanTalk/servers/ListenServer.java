@@ -1,10 +1,12 @@
-package com.nenovike.lanTalk.util;
+package com.nenovike.lanTalk.servers;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 
 import com.nenovike.lanTalk.MainWindow;
+
+import javafx.application.Platform;
 
 public abstract class ListenServer implements Runnable{
 	protected MainWindow mainWindow;
@@ -17,7 +19,7 @@ public abstract class ListenServer implements Runnable{
 		this.mainWindow = mainWindow;
 	}
 
-	public void run() {
+	public void run(){
 		DatagramPacket newPacket = new DatagramPacket(buf, buf.length);
 		running = true;
 		while (running) {
