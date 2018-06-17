@@ -1,6 +1,7 @@
 package com.nenovike.lanTalk;
 
 import java.io.IOException;
+import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -8,6 +9,7 @@ import java.net.MulticastSocket;
 
 import com.nenovike.lanTalk.servers.MulticastListenServer;
 import com.nenovike.lanTalk.servers.UnicastListenServer;
+import com.nenovike.lanTalk.util.MessagePacket;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -18,11 +20,10 @@ import javafx.stage.Stage;
 public class MainWindow extends Application {
 	String userName;
 	Stage mainWindowStage;
-	MainWindowController mainWindowController;
+	public MainWindowController mainWindowController;
 
 	InetSocketAddress defaultHelloAddress;
 	InetSocketAddress userAddress;
-
 
 	MulticastSocket multicastSocket;
 	DatagramSocket datagramSocket;
@@ -30,16 +31,18 @@ public class MainWindow extends Application {
 	MulticastListenServer helloListenServer;
 	Thread listenServerThread;
 	Thread helloListenServerThread;
-	
+
 	private int defaultPort = 1234;
-	
+
 	boolean debug = true;
 
 	@Override
 	public void start(Stage mainWindowStage) throws IOException, InterruptedException {
 		initStage(mainWindowStage);
+
 		prepareSockets();
 		startServers();
+
 		mainWindowController.changeName();
 	}
 
@@ -66,6 +69,10 @@ public class MainWindow extends Application {
 
 	private void initStage(Stage stage) throws IOException {
 		mainWindowStage = stage;
+		mainWindowStage.setOnCloseRequest(e -> {
+			if (mainWindowController.conversationWindowStage != null)
+				mainWindowController.conversationWindowStage.close();
+		});
 		FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("MainWindow.fxml"));
 		Parent mainWindowParent = fxmlLoader.load();
 		mainWindowController = (MainWindowController) fxmlLoader.getController();
@@ -86,11 +93,11 @@ public class MainWindow extends Application {
 	public static void main(String[] args) {
 		MainWindow.launch(args);
 	}
-	
+
 	public MainWindowController getController() {
 		return mainWindowController;
 	}
-	
+
 	public InetSocketAddress getUserAddress() {
 		return userAddress;
 	}
@@ -98,7 +105,7 @@ public class MainWindow extends Application {
 	public void setUserAddress(InetSocketAddress userAddress) {
 		this.userAddress = userAddress;
 	}
-	
+
 	public String getUserName() {
 		return userName;
 	}
@@ -106,7 +113,7 @@ public class MainWindow extends Application {
 	public void setUserName(String userName) {
 		this.userName = userName;
 	}
-	
+
 	public void addContactFromMessage(String message) {
 		getController().addAddressToContactList(message);
 	}

@@ -6,8 +6,6 @@ import java.net.DatagramSocket;
 
 import com.nenovike.lanTalk.MainWindow;
 
-import javafx.application.Platform;
-
 public abstract class ListenServer implements Runnable{
 	protected MainWindow mainWindow;
 	protected DatagramSocket socket;
@@ -24,7 +22,7 @@ public abstract class ListenServer implements Runnable{
 		running = true;
 		while (running) {
 			try {
-				socket.setSoTimeout(1000);
+				socket.setSoTimeout(5000);
 				socket.receive(newPacket);
 				handlePacket(newPacket);
 			} catch (Exception e) {

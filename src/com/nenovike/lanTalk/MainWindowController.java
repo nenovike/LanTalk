@@ -17,9 +17,10 @@ import java.util.ResourceBundle;
 import com.nenovike.lanTalk.util.ContactButton;
 import com.nenovike.lanTalk.util.MessagePacket;
 
-import javafx.application.Platform;
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -33,12 +34,13 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 public class MainWindowController implements Initializable {
 
 	public MainWindow mainWindow = null;
 	private HashMap<String, ContactButton> contactButtons = new HashMap<String, ContactButton>();
-	private HashMap<String, String> conversationMap = new HashMap<String , String>();
+	private HashMap<String, String> conversationMap = new HashMap<String, String>();
 	ConversationWindowController conversationWindowController = null;
 	Stage conversationWindowStage;
 	@FXML
@@ -50,7 +52,16 @@ public class MainWindowController implements Initializable {
 
 	@Override
 	public void initialize(URL arg0, ResourceBundle arg1) {
-
+		Timeline timeline = new Timeline(new KeyFrame(Duration.millis(2500), ae -> {
+			try {
+				resyncAddresses();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}));
+		timeline.setCycleCount(Animation.INDEFINITE);
+		timeline.play();
 	}
 
 	@FXML
@@ -79,7 +90,7 @@ public class MainWindowController implements Initializable {
 		sendMulticastHelloPacket(mainWindow.defaultHelloAddress);
 	}
 
-	private void sendMulticastHelloPacket(InetSocketAddress address) throws IOException {
+	public void sendMulticastHelloPacket(InetSocketAddress address) throws IOException {
 
 		String data = mainWindow.userName + mainWindow.userAddress.toString();
 		byte[] buf = new MessagePacket('H', data).prepareToSend();
@@ -124,7 +135,7 @@ public class MainWindowController implements Initializable {
 		return address;
 	}
 
-	public void addAddressToContactList(String message){
+	public void addAddressToContactList(String message) {
 		String address = message.substring(message.indexOf("/"));
 		if (contactButtons.containsKey(address))
 			contactButtons.replace(address, new ContactButton(message));
@@ -133,21 +144,25 @@ public class MainWindowController implements Initializable {
 		renderContactButtons();
 	}
 
-	public void renderContactButtons(){
+	public void removeAddressFromContactList(String message) {
+		String address = message.substring(message.indexOf("/"));
+		if (contactButtons.containsKey(address)) {
+			contactButtons.remove(address);
+			renderContactButtons();
+		}
+	}
+
+	public void renderContactButtons() {
 		VBox root = new VBox();
 		root.setSpacing(10);
 		root.setPadding(new Insets(10));
 		for (String key : contactButtons.keySet()) {
 			ContactButton button = contactButtons.get(key);
-			button.setOnAction(new EventHandler<ActionEvent>() {
-				@Override
-				public void handle(ActionEvent event){
-					try {
+			button.setOnAction(e -> {
+				try {
 					openConversationWindow(button.getAddress().toString(), button.getName());
-					}
-					catch(Exception e) {
-						System.out.println(e.getMessage());
-					}
+				} catch (Exception ex) {
+					System.out.println(ex.getMessage());
 				}
 			});
 			root.getChildren().add(button);
@@ -155,16 +170,50 @@ public class MainWindowController implements Initializable {
 		contactList.setContent(root);
 	}
 
-	public void openConversationWindow(String address, String name) throws IOException{
+	public void openConversationWindow(String address, String name) throws IOException {
 		if (conversationWindowController == null) {
 			FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("ConversationWindow.fxml"));
 			Parent conversationWindowParent = fxmlLoader.load();
 			conversationWindowController = (ConversationWindowController) fxmlLoader.getController();
 			conversationWindowStage = new Stage();
+			conversationWindowStage.setOnCloseRequest(e -> {
+				conversationWindowController = null;
+			});
 			conversationWindowStage.setScene(new Scene(conversationWindowParent));
 			conversationWindowStage.show();
 		}
-		conversationWindowStage.setTitle(name+address);
+		conversationWindowStage.setTitle(name + address);
 		conversationWindowController.setConversationText(conversationMap.get(address));
+		String host = address.substring(address.indexOf("/") + 1, address.indexOf(":"));
+		int port = Integer.parseInt(address.substring(address.indexOf(":") + 1));
+		conversationWindowController.address = new InetSocketAddress(host, port);
+		conversationWindowController.name = name;
+		conversationWindowController.mainController = this;
+
 	}
+
+	public void addSelfTextToConversation(String address, String text) {
+		if (!conversationMap.containsKey(address))
+			conversationMap.put(address, "");
+		String oldText = conversationMap.get(address);
+		if (!oldText.isEmpty())
+			oldText = oldText + "\n";
+		oldText += text;
+		conversationMap.replace(address, oldText);
+		if (conversationWindowController != null && conversationWindowController.address.toString().equals(address))
+			conversationWindowController.setConversationText(oldText);
+	}
+
+	public void addOthersTextToConversation(String address, String text) {
+		if (!conversationMap.containsKey(address))
+			conversationMap.put(address, "");
+		String oldText = conversationMap.get(address);
+		if (!oldText.isEmpty())
+			oldText = oldText + "\n";
+		oldText += "RE: " + text.replaceAll("/n", "/n   ");
+		conversationMap.replace(address, oldText);
+		if (conversationWindowController != null && conversationWindowController.address.toString().equals(address))
+			conversationWindowController.setConversationText(oldText);
+	}
+
 }

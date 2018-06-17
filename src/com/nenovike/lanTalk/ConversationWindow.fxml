@@ -8,7 +8,7 @@
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="413.0" prefWidth="400.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.nenovike.lanTalk.ConversationWindowController">
    <children>
       <Button fx:id="buttonSend" layoutX="334.0" layoutY="340.0" mnemonicParsing="false" prefHeight="59.0" prefWidth="52.0" text="Wyślij" />
-      <TextArea fx:id="messageText" layoutX="14.0" layoutY="340.0" prefHeight="59.0" prefWidth="313.0" />
       <TextArea fx:id="conversationText" editable="false" layoutX="14.0" layoutY="20.0" prefHeight="306.0" prefWidth="372.0" />
+      <TextArea fx:id="messageText" layoutX="14.0" layoutY="340.0" prefHeight="59.0" prefWidth="313.0" />
    </children>
 </AnchorPane>

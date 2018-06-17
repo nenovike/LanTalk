@@ -3,6 +3,7 @@ package com.nenovike.lanTalk.servers;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetSocketAddress;
 
 import com.nenovike.lanTalk.MainWindow;
 import com.nenovike.lanTalk.util.MessagePacket;
@@ -20,6 +21,11 @@ public class UnicastListenServer extends ListenServer {
 		if(packet.getType() == 'R')
 		{
 			Platform.runLater(() -> mainWindow.addContactFromMessage(packet.getMessage()));
+		}
+		if(packet.getType() == 'M')
+		{
+			InetSocketAddress address = (InetSocketAddress) newPacket.getSocketAddress();
+			Platform.runLater(() -> mainWindow.mainWindowController.addOthersTextToConversation(address.toString(), packet.getMessage()));
 		}
 	}
 }

@@ -20,7 +20,7 @@ public class MulticastListenServer extends ListenServer {
 	
 	public void handlePacket(DatagramPacket newDatagramPacket) throws IOException {
 		MessagePacket packet = new MessagePacket(newDatagramPacket.getData());
-		if(packet.getType() == 'H' && isHelloPacketSelf(packet))
+		if(packet.getType() == 'H' && isHelloPacketNotSelf(packet))
 		{
 			Platform.runLater(() -> mainWindow.addContactFromMessage(packet.getMessage()));
 			sendHelloResponse(packet.getMessage());
@@ -43,7 +43,7 @@ public class MulticastListenServer extends ListenServer {
 		return new InetSocketAddress(host, port);
 	}
 	
-	private boolean isHelloPacketSelf(MessagePacket packet)
+	private boolean isHelloPacketNotSelf(MessagePacket packet)
 	{
 		return !packet.getMessage().equals(mainWindow.getUserName() + mainWindow.getUserAddress());
 	}
