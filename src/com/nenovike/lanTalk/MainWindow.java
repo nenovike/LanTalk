@@ -1,7 +1,6 @@
 package com.nenovike.lanTalk;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -9,7 +8,6 @@ import java.net.MulticastSocket;
 
 import com.nenovike.lanTalk.servers.MulticastListenServer;
 import com.nenovike.lanTalk.servers.UnicastListenServer;
-import com.nenovike.lanTalk.util.MessagePacket;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -17,23 +15,64 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+/**
+ * Main window class.
+ * 
+ * @author Kondzio
+ * @version 1.0
+ */
 public class MainWindow extends Application {
+	/**
+	 * Current user's name.
+	 */
 	String userName;
+	/**
+	 * Main stage object.
+	 */
 	Stage mainWindowStage;
-	public MainWindowController mainWindowController;
-
-	InetSocketAddress defaultHelloAddress;
+	/**
+	 * Main window controller object.
+	 */
+	MainWindowController mainWindowController;
+	/**
+	 * Multicast address to send "Hello packets" through.
+	 */
+	InetSocketAddress helloAddress;
+	/**
+	 * Local user address.
+	 */
 	InetSocketAddress userAddress;
-
+	/**
+	 * Multicast socket to send "Hello" packets through.
+	 */
 	MulticastSocket multicastSocket;
+	/**
+	 * Unicast socket to send messages through.
+	 */
 	DatagramSocket datagramSocket;
+	/**
+	 * Socket server receiving messages.
+	 */
 	UnicastListenServer listenServer;
+	/**
+	 * Socket server receiving "Hello" packets.
+	 */
 	MulticastListenServer helloListenServer;
+	/**
+	 * {@link #listenServer} {@link Thread} object.
+	 */
 	Thread listenServerThread;
+	/**
+	 * {@link #helloListenServer} {@link Thread} object.
+	 */
 	Thread helloListenServerThread;
-
+	/**
+	 * Default port for unicast communication.
+	 */
 	private int defaultPort = 1234;
-
+	/**
+	 * Debug mode.
+	 */
 	boolean debug = true;
 
 	@Override
@@ -56,17 +95,29 @@ public class MainWindow extends Application {
 		helloListenServerThread.join();
 	}
 
+	/**
+	 * Create all address and socket objects.
+	 * 
+	 * @throws IOException
+	 */
 	private void prepareSockets() throws IOException {
 		userName = "LanTalk";
-		defaultHelloAddress = new InetSocketAddress("233.0.0.0", 1111);
+		helloAddress = new InetSocketAddress("233.0.0.0", 1111);
 		int port = debug ? mainWindowController.getNewPort() : defaultPort;
 		InetAddress address = mainWindowController.getNewAddress();
 		userAddress = new InetSocketAddress(address, port);
 		multicastSocket = new MulticastSocket(1111);
-		multicastSocket.joinGroup(defaultHelloAddress.getAddress());
+		multicastSocket.joinGroup(helloAddress.getAddress());
 		datagramSocket = new DatagramSocket(userAddress);
 	}
 
+	/**
+	 * Initialize main stage. Create and show scene.
+	 * 
+	 * @param stage
+	 *            main window stage
+	 * @throws IOException
+	 */
 	private void initStage(Stage stage) throws IOException {
 		mainWindowStage = stage;
 		mainWindowStage.setOnCloseRequest(e -> {
@@ -81,6 +132,9 @@ public class MainWindow extends Application {
 		mainWindowStage.show();
 	}
 
+	/**
+	 * Start listen servers and their threads.
+	 */
 	private void startServers() {
 		listenServer = new UnicastListenServer(this, datagramSocket);
 		listenServerThread = new Thread(listenServer);
@@ -90,31 +144,43 @@ public class MainWindow extends Application {
 		helloListenServerThread.start();
 	}
 
-	public static void main(String[] args) {
-		MainWindow.launch(args);
-	}
-
-	public MainWindowController getController() {
-		return mainWindowController;
-	}
-
+	/**
+	 * Get user address.
+	 * 
+	 * @return user address
+	 */
 	public InetSocketAddress getUserAddress() {
 		return userAddress;
 	}
 
-	public void setUserAddress(InetSocketAddress userAddress) {
-		this.userAddress = userAddress;
-	}
-
+	/**
+	 * Get user name.
+	 * 
+	 * @return user name
+	 */
 	public String getUserName() {
 		return userName;
 	}
 
-	public void setUserName(String userName) {
-		this.userName = userName;
+	/**
+	 * Add contact to {@link #mainWindowController}'s list.
+	 * 
+	 * @param message
+	 */
+	public void addContactFromMessage(String message) {
+		mainWindowController.addAddressToContactList(message);
 	}
 
-	public void addContactFromMessage(String message) {
-		getController().addAddressToContactList(message);
+	/**
+	 * Get main window controller.
+	 * 
+	 * @return controller
+	 */
+	public MainWindowController getMainWindowController() {
+		return mainWindowController;
+	}
+
+	public static void main(String[] args) {
+		MainWindow.launch(args);
 	}
 }
